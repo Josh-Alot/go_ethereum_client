@@ -18,12 +18,12 @@ func main() {
 		blocknumber := flag.NewFlagSet("blocknumber", flag.ExitOnError)
 		blocknumber.Parse(os.Args[2:])
 
-		heigth, err := BlockNumber()
+		height, err := BlockNumber()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("%d\n", heigth)
+		fmt.Printf("%d\n", height)
 	default:
 		fmt.Printf("command not found\n")
 		os.Exit(1)

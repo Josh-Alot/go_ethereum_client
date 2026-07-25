@@ -60,10 +60,10 @@ func BlockNumber() (uint64, error) {
 		return 0, errors.New(rpcResponse.Error.Message)
 	}
 
-	version, err := strconv.ParseUint(rpcResponse.Result, 0, 64)
+	height, err := strconv.ParseUint(rpcResponse.Result, 0, 64)
 	if err != nil {
 		return 0, err
 	}
 
-	return version, nil
+	return height, nil
 }
