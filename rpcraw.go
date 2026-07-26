@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -35,25 +36,25 @@ func BlockNumber() (uint64, error) {
 
 	req, err := json.Marshal(msg)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("marshal %v: %w", msg, err)
 	}
 
 	res, err := http.Post(rpcURL, "application/json", bytes.NewReader(req))
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("post %s: %w", rpcURL, err)
 	}
 
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("read all: %w", err)
 	}
 
 	var rpcResponse RpcResponseData
 	err = json.Unmarshal(body, &rpcResponse)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("unmarshal: %w", err)
 	}
 
 	if rpcResponse.Error != nil {
@@ -62,7 +63,7 @@ func BlockNumber() (uint64, error) {
 
 	height, err := strconv.ParseUint(rpcResponse.Result, 0, 64)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("parse uint %s: %w", rpcResponse.Result, err)
 	}
 
 	return height, nil
