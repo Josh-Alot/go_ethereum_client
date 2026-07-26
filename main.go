@@ -18,7 +18,7 @@ func main() {
 		blocknumber := flag.NewFlagSet("blocknumber", flag.ExitOnError)
 		blocknumber.Parse(os.Args[2:])
 
-		height, err := BlockNumber()
+		height, err := BlockHeight()
 		if err != nil {
 			log.Fatal(err)
 		}
