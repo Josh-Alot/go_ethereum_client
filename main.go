@@ -24,6 +24,25 @@ func main() {
 		}
 
 		fmt.Printf("%d\n", height)
+
+	case "getbalance":
+		getbalance := flag.NewFlagSet("getbalance", flag.ExitOnError)
+
+		address := getbalance.String("address", "", "the required address to check balance")
+		getbalance.Parse(os.Args[2:])
+
+		if *address == "" {
+			fmt.Printf("a wallet address is required\n")
+			os.Exit(1)
+		}
+
+		balance, err := Balance(*address)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%s\n", FormatWeiToEther(balance))
+
 	default:
 		fmt.Printf("command not found\n")
 		os.Exit(1)
