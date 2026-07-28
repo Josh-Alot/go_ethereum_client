@@ -9,16 +9,24 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage: [not defined yet]") // name if after
+		fmt.Println("usage: blocknumber, getbalance") // name if after
 		os.Exit(1)
 	}
+
+	client, err := NewClient(rpcURL)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	defer client.Close()
 
 	switch os.Args[1] {
 	case "blocknumber":
 		blocknumber := flag.NewFlagSet("blocknumber", flag.ExitOnError)
 		blocknumber.Parse(os.Args[2:])
 
-		height, err := BlockHeight()
+		height, err := client.BlockHeight()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,7 +44,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		balance, err := Balance(*address)
+		balance, err := client.Balance(*address)
 		if err != nil {
 			log.Fatal(err)
 		}
