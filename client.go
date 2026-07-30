@@ -13,6 +13,15 @@ type Client struct {
 	eth *ethclient.Client
 }
 
+type BlockSummary struct {
+	Height       uint64
+	Hash         string
+	PreviousHash string
+	StateRoot    string
+	Timestamp    uint64
+	Transactions int
+}
+
 func NewClient(rpcURL string) (*Client, error) {
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
@@ -49,4 +58,22 @@ func (client *Client) Balance(hexAddr string) (*big.Int, error) {
 	}
 
 	return balance, nil
+}
+
+func (client *Client) BlockInfo(height *big.Int) (*BlockSummary, error) {
+	block, err := client.eth.BlockByNumber(context.Background(), height)
+	if err != nil {
+		return nil, fmt.Errorf("blockinfo: %w", err)
+	}
+
+	summary := BlockSummary{
+		Height:       block.NumberU64(),
+		Hash:         block.Hash().Hex(),
+		PreviousHash: block.ParentHash().Hex(),
+		StateRoot:    block.Root().Hex(),
+		Timestamp:    block.Time(),
+		Transactions: len(block.Transactions()),
+	}
+
+	return &summary, nil
 }

@@ -4,12 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage: blocknumber, getbalance") // name if after
+		fmt.Println("usage: blocknumber, getbalance, blockinfo")
 		os.Exit(1)
 	}
 
@@ -50,6 +51,24 @@ func main() {
 		}
 
 		fmt.Printf("%s\n", FormatWeiToEther(balance))
+
+	case "blockinfo":
+		blockinfo := flag.NewFlagSet("blockinfo", flag.ExitOnError)
+		height := blockinfo.Int("height", -1, "the block height on chain")
+
+		blockinfo.Parse(os.Args[2:])
+
+		if *height < 0 {
+			fmt.Printf("must give a block height\n")
+			os.Exit(1)
+		}
+
+		summary, err := client.BlockInfo(big.NewInt(int64(*height)))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		FormatBlockSummary(*summary)
 
 	default:
 		fmt.Printf("command not found\n")
