@@ -1,2 +1,4 @@
 go_ethereum_client
 wallets.txt
+
+.anvil/
