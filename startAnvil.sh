@@ -1,2 +1,3 @@
 #!/bin/bash
-anvil --block-time 30
+mkdir -p .anvil/
+anvil --block-time 15 --state .anvil/state.json
