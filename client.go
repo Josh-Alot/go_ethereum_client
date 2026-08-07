@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -20,6 +22,17 @@ type BlockSummary struct {
 	StateRoot    string
 	Timestamp    uint64
 	Transactions int
+}
+
+type TxSummary struct {
+	Pending bool
+	Hash    string
+	Nonce   uint64
+	From    string
+	To      string
+	Value   *big.Int
+	Type    uint8
+	ChainID *big.Int
 }
 
 func NewClient(rpcURL string) (*Client, error) {
@@ -76,4 +89,40 @@ func (client *Client) BlockInfo(height *big.Int) (*BlockSummary, error) {
 	}
 
 	return &summary, nil
+}
+
+func (client *Client) TransactionByHash(txHash string) (*TxSummary, error) {
+	isTxHash := common.IsHexHash(txHash)
+	if !isTxHash {
+		return nil, errors.New("tx info valid hash error: invalid tx hash")
+	}
+
+	tx, isPending, err := client.eth.TransactionByHash(context.Background(), common.HexToHash(txHash))
+	if err != nil {
+		return nil, fmt.Errorf("tx info pending error: %w", err)
+	}
+
+	txSigner := types.LatestSignerForChainID(tx.ChainId())
+	from, err := types.Sender(txSigner, tx)
+	if err != nil {
+		return nil, fmt.Errorf("tx info signer error: %w", err)
+	}
+
+	to := ""
+	if tx.To() != nil {
+		to = tx.To().Hex()
+	}
+
+	newTx := TxSummary{
+		Pending: isPending,
+		Hash:    tx.Hash().Hex(),
+		Nonce:   tx.Nonce(),
+		From:    from.Hex(),
+		To:      to,
+		Value:   tx.Value(),
+		Type:    tx.Type(),
+		ChainID: tx.ChainId(),
+	}
+
+	return &newTx, nil
 }

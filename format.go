@@ -28,3 +28,26 @@ func FormatBlockSummary(summary BlockSummary) {
 	fmt.Printf("block timestamp: %d (%s)\n", summary.Timestamp, FormatTimestampDate(summary.Timestamp))
 	fmt.Printf("total transactions: %d\n", summary.Transactions)
 }
+
+func FormatTxSummary(tx TxSummary) {
+	fmt.Printf("Transaction hash: %s\n", tx.Hash)
+	fmt.Printf("Nonce: %d\n", tx.Nonce)
+
+	if !tx.Pending {
+		fmt.Println("Status: validated")
+	} else {
+		fmt.Println("Status: validating")
+	}
+
+	fmt.Printf("From: %s\n", tx.From)
+
+	if tx.To != "" {
+		fmt.Printf("To: %s\n", tx.To)
+	} else {
+		fmt.Println("To: Transaction is a contract creation and it does not have a destiny")
+	}
+
+	fmt.Printf("Value: %s ETH \n", FormatWeiToEther(tx.Value))
+	fmt.Printf("Type: %d\n", tx.Type)
+	fmt.Printf("Chain ID: %d\n", tx.ChainID)
+}

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage: blocknumber, getbalance, blockinfo")
+		fmt.Println("usage: blocknumber, getbalance, blockinfo, txinfo")
 		os.Exit(1)
 	}
 
@@ -69,6 +69,24 @@ func main() {
 		}
 
 		FormatBlockSummary(*summary)
+
+	case "txinfo":
+		txinfo := flag.NewFlagSet("txinfo", flag.ExitOnError)
+		txHash := txinfo.String("hash", "", "the transaction hash")
+
+		txinfo.Parse(os.Args[2:])
+
+		if *txHash == "" {
+			fmt.Printf("must give a transaction hash\n")
+			os.Exit(1)
+		}
+
+		tx, err := client.TransactionByHash(*txHash)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		FormatTxSummary(*tx)
 
 	default:
 		fmt.Printf("command not found\n")
