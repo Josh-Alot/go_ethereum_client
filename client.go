@@ -25,7 +25,6 @@ type BlockSummary struct {
 }
 
 type TxSummary struct {
-	Pending bool
 	Hash    string
 	Nonce   uint64
 	From    string
@@ -33,6 +32,15 @@ type TxSummary struct {
 	Value   *big.Int
 	Type    uint8
 	ChainID *big.Int
+	Receipt *ReceiptSummary
+}
+
+type ReceiptSummary struct {
+	Status            uint64
+	GasUsed           uint64
+	EffectiveGasPrice *big.Int
+	BlockNumber       *big.Int
+	ContractAddress   string
 }
 
 func NewClient(rpcURL string) (*Client, error) {
@@ -114,7 +122,6 @@ func (client *Client) TransactionByHash(txHash string) (*TxSummary, error) {
 	}
 
 	newTx := TxSummary{
-		Pending: isPending,
 		Hash:    tx.Hash().Hex(),
 		Nonce:   tx.Nonce(),
 		From:    from.Hex(),
@@ -122,6 +129,31 @@ func (client *Client) TransactionByHash(txHash string) (*TxSummary, error) {
 		Value:   tx.Value(),
 		Type:    tx.Type(),
 		ChainID: tx.ChainId(),
+	}
+
+	if !isPending {
+		receipt, err := client.eth.TransactionReceipt(context.Background(), tx.Hash())
+		if err != nil {
+			return nil, fmt.Errorf("receipt formatting error: %w", err)
+		}
+
+		// unlike tx.To(), receipt.ContractAddress doesn't return a pointer, it's a parameter
+		// so the comparison to nil won't work here,
+		// because of that, we have to check if the variable is empty
+		contractAddr := ""
+		if receipt.ContractAddress != (common.Address{}) {
+			contractAddr = receipt.ContractAddress.Hex()
+		}
+
+		newReceipt := ReceiptSummary{
+			Status:            receipt.Status,
+			GasUsed:           receipt.GasUsed,
+			BlockNumber:       receipt.BlockNumber,
+			EffectiveGasPrice: receipt.EffectiveGasPrice,
+			ContractAddress:   contractAddr,
+		}
+
+		newTx.Receipt = &newReceipt
 	}
 
 	return &newTx, nil

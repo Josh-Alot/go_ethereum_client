@@ -32,22 +32,37 @@ func FormatBlockSummary(summary BlockSummary) {
 func FormatTxSummary(tx TxSummary) {
 	fmt.Printf("Transaction hash: %s\n", tx.Hash)
 	fmt.Printf("Nonce: %d\n", tx.Nonce)
-
-	if !tx.Pending {
-		fmt.Println("Status: validated")
-	} else {
-		fmt.Println("Status: validating")
-	}
-
 	fmt.Printf("From: %s\n", tx.From)
 
 	if tx.To != "" {
 		fmt.Printf("To: %s\n", tx.To)
 	} else {
-		fmt.Println("To: Transaction is a contract creation and it does not have a destiny")
+		fmt.Println("To: contract creation (address assigned when mined)")
 	}
 
-	fmt.Printf("Value: %s ETH \n", FormatWeiToEther(tx.Value))
+	if tx.Receipt == nil {
+		fmt.Println("Status: validating")
+	} else {
+		fmt.Printf("Block number: %d\n", tx.Receipt.BlockNumber)
+
+		if tx.Receipt.ContractAddress != "" {
+			fmt.Printf("Contract deployment address: %s\n", tx.Receipt.ContractAddress)
+		}
+
+		if tx.Receipt.Status == 0 {
+			fmt.Println("Status: reverted")
+		} else {
+			fmt.Println("Status: completed")
+		}
+
+		fmt.Printf("Gas Used: %d Gas\n", tx.Receipt.GasUsed)
+		fmt.Printf("Effective Gas Price: %d Wei\n", tx.Receipt.EffectiveGasPrice)
+
+		bigGasUsed := new(big.Int).SetUint64(tx.Receipt.GasUsed)
+		fmt.Printf("Transaction cost: %d Wei\n", new(big.Int).Mul(bigGasUsed, tx.Receipt.EffectiveGasPrice))
+	}
+
+	fmt.Printf("Value: %s ETH\n", FormatWeiToEther(tx.Value))
 	fmt.Printf("Type: %d\n", tx.Type)
 	fmt.Printf("Chain ID: %d\n", tx.ChainID)
 }
