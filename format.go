@@ -66,3 +66,18 @@ func FormatTxSummary(tx TxSummary) {
 	fmt.Printf("Type: %d\n", tx.Type)
 	fmt.Printf("Chain ID: %d\n", tx.ChainID)
 }
+
+func FormatAccountCreated(account AccountSummary) {
+	fmt.Printf("Account created: %s\n", account.Address)
+}
+
+func FormatAccountsList(accounts []AccountSummary) {
+	if len(accounts) == 0 {
+		fmt.Println("No accounts found")
+	} else {
+		fmt.Println("Accounts available:")
+		for _, account := range accounts {
+			fmt.Printf("%s\n", account.Address)
+		}
+	}
+}
