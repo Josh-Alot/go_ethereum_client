@@ -110,12 +110,20 @@ func main() {
 
 		createaccount.Parse(os.Args[2:])
 
-		if *password == "" {
-			fmt.Printf("provide the encryption password\n")
-			os.Exit(1)
+		var pw []byte
+		var err error
+
+		if *password != "" {
+			fmt.Fprintln(os.Stderr, "CAUTION: you provided the password on the terminal, it can be leaked through the bash history, use createaccount without the password flag")
+			pw = []byte(*password)
+		} else {
+			pw, err = ReadPassword("Enter the keystore password: ")
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
-		account, err := CreateAccount(*password)
+		account, err := CreateAccount(string(pw))
 		if err != nil {
 			log.Fatal(err)
 		}
