@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"fmt"
+	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type AccountSummary struct {
@@ -35,6 +38,33 @@ func ListAccounts() []AccountSummary {
 	}
 
 	return summary
+}
+
+// this function only works because other types of schemes are not in the scope of this project
+// if we want to give support to any other scheme, such as a metamask wallet, trezor or ledger
+// this feature must be refactorated
+func LoadPrivateKey(address string, password []byte) (*ecdsa.PrivateKey, error) {
+	ks := createKeystore()
+	wantedAddr := common.HexToAddress(address)
+	accounts := ks.Accounts()
+
+	for _, acct := range accounts {
+		if wantedAddr == acct.Address {
+			data, err := os.ReadFile(acct.URL.Path)
+			if err != nil {
+				return nil, fmt.Errorf("reading keystore error: %w", err)
+			}
+
+			key, err := keystore.DecryptKey(data, string(password))
+			if err != nil {
+				return nil, fmt.Errorf("decryption key error: %w", err)
+			}
+
+			return key.PrivateKey, nil
+		}
+	}
+
+	return nil, fmt.Errorf("load private key: no account found for address %s", address)
 }
 
 func createKeystore() *keystore.KeyStore {
