@@ -18,34 +18,21 @@ func FormatWeiToEther(balance *big.Int) string {
 }
 
 func ParseEtherToWei(amount string) (*big.Int, error) {
-	if amount == "" {
-		return nil, fmt.Errorf("parse ether to wei error: a value in ether must be sent")
-	}
-
-	if strings.HasPrefix(amount, "-") {
-		return nil, fmt.Errorf("parse ether to wei error: the ether transaction cannot be negative")
-	}
-
 	before, after, _ := strings.Cut(amount, ".")
-
-	if strings.Contains(after, ".") {
-		return nil, fmt.Errorf("parse ether to wei error: invalid ether value, the ether must have only one decimal separator")
-	}
-
 	if len(after) > 18 {
 		return nil, fmt.Errorf("parse ether to wei error: invalid amount, the decimals must be at max 18")
 	}
 
 	after = after + strings.Repeat("0", (18-len(after)))
-
 	parsedWei := before + after
 
-	if amount == "" {
-		return nil, fmt.Errorf("parse ether to wei error: a value in ether must be sent")
-	}
 	wei, ok := new(big.Int).SetString(parsedWei, 10)
 	if !ok {
 		return nil, fmt.Errorf("parse ether to wei error: failed to parse %s", amount)
+	}
+
+	if wei.Sign() <= 0 {
+		return nil, fmt.Errorf("parse ether to wei error: invalid amount")
 	}
 
 	return wei, nil
