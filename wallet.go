@@ -41,10 +41,16 @@ func ListAccounts() []AccountSummary {
 }
 
 // this function only works because other types of schemes are not in the scope of this project
-// if we want to give support to any other scheme, such as a metamask wallet, trezor or ledger
-// this feature must be refactorated
+// if we want to give support to any other scheme, such as trezor or ledger
+// this feature must be refactored
 func LoadPrivateKey(address string, password []byte) (*ecdsa.PrivateKey, error) {
 	ks := createKeystore()
+
+	isAddr := common.IsHexAddress(address)
+	if !isAddr {
+		return nil, fmt.Errorf("hexAddr %s: invalid address", address)
+	}
+
 	wantedAddr := common.HexToAddress(address)
 	accounts := ks.Accounts()
 
