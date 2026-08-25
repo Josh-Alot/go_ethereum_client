@@ -6,11 +6,13 @@ import (
 	"log"
 	"math/big"
 	"os"
+
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts")
+		fmt.Println("usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth")
 		os.Exit(1)
 	}
 
@@ -136,6 +138,29 @@ func main() {
 
 		accounts := ListAccounts()
 		FormatAccountsList(accounts)
+
+	case "sendeth":
+		sendeth := flag.NewFlagSet("sendeth", flag.ExitOnError)
+		from := sendeth.String("from", "", "the required address to check balance")
+
+		sendeth.Parse(os.Args[2:])
+
+		if *from == "" {
+			fmt.Printf("the origin wallet address is required\n")
+			os.Exit(1)
+		}
+
+		password, err := ReadPassword("Enter the keystore password: ")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		key, err := LoadPrivateKey(*from, password)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("key: %v\n", crypto.PubkeyToAddress(key.PublicKey).Hex())
 
 	default:
 		fmt.Printf("command not found\n")
