@@ -201,7 +201,15 @@ func main() {
 }
 
 func createClient() (*Client, error) {
-	client, err := NewClient(rpcURL)
+	defaultRpcUrl := "http://127.0.0.1:8545"
+
+	rpc := os.Getenv("ETH_RPC_URL")
+	if rpc == "" {
+		fmt.Fprint(os.Stderr, "CAUTION: You are using anvil, not the sepolia network\n")
+		rpc = defaultRpcUrl
+	}
+
+	client, err := NewClient(rpc)
 	if err != nil {
 		return nil, fmt.Errorf("client connection error: %w", err)
 	}
