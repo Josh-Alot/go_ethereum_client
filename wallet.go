@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type AccountSummary struct {
@@ -71,6 +72,16 @@ func LoadPrivateKey(address string, password []byte) (*ecdsa.PrivateKey, error) 
 	}
 
 	return nil, fmt.Errorf("load private key: no account found for address %s", address)
+}
+
+func SignTx(tx *types.Transaction, key *ecdsa.PrivateKey) (*types.Transaction, error) {
+	signer := types.LatestSignerForChainID(tx.ChainId())
+	signedTx, err := types.SignTx(tx, signer, key)
+	if err != nil {
+		return nil, fmt.Errorf("sign tx failure: %w", err)
+	}
+
+	return signedTx, nil
 }
 
 func createKeystore() *keystore.KeyStore {

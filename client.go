@@ -158,3 +158,74 @@ func (client *Client) TransactionByHash(txHash string) (*TxSummary, error) {
 
 	return &newTx, nil
 }
+
+func (client *Client) PrepareTx(from, to, amount string) (*types.Transaction, error) {
+	isFromAddr := common.IsHexAddress(from)
+	if !isFromAddr {
+		return nil, fmt.Errorf("hexAddr %s: invalid origin address", from)
+	}
+
+	isToAddr := common.IsHexAddress(to)
+	if !isToAddr {
+		return nil, fmt.Errorf("hexAddr %s: invalid destination address", to)
+	}
+
+	addrFrom := common.HexToAddress(from)
+	addrTo := common.HexToAddress(to)
+
+	amountTo, err := ParseEtherToWei(amount)
+	if err != nil {
+		return nil, err
+	}
+
+	chainID, err := client.eth.ChainID(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("prepare tx chain id error: %w", err)
+	}
+
+	// a study case, using PendingNonceAt returns the expected nonce of the origin address
+	// using NonceAt returns the last confirmed nonce of the origin address
+	// both cases are valid in a production environment, but the second has a unique use case
+	// when you want to override a previous unconfirmed transaction, you have bump the fee caps by at least 10%
+	// so the older transaction is overriden by the new transaction
+	// in this use case, when the transaction is typed on a terminal, the NonceAt is unnecessary
+	// but in GUI app or browser extension, this feature can be useful
+	nonce, err := client.eth.PendingNonceAt(context.Background(), addrFrom)
+	if err != nil {
+		return nil, fmt.Errorf("prepare tx nonce error: %w", err)
+	}
+
+	gasTipCap, err := client.eth.SuggestGasTipCap(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("prepare tx gas tip cap error: %w", err)
+	}
+
+	header, err := client.eth.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("prepare tx header error: %w", err)
+	}
+
+	feeMargin := new(big.Int).Mul(big.NewInt(2), header.BaseFee)
+	gasFeeCap := new(big.Int).Add(gasTipCap, feeMargin)
+
+	tx := types.NewTx(&types.DynamicFeeTx{
+		ChainID:   chainID,
+		Nonce:     nonce,
+		GasTipCap: gasTipCap,
+		GasFeeCap: gasFeeCap,
+		Gas:       21000,
+		To:        &addrTo,
+		Value:     amountTo,
+	})
+
+	return tx, nil
+}
+
+func (client *Client) SendTx(tx *types.Transaction) error {
+	err := client.eth.SendTransaction(context.Background(), tx)
+	if err != nil {
+		return fmt.Errorf("send transaction error: %w", err)
+	}
+
+	return nil
+}

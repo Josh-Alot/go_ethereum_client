@@ -6,8 +6,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func main() {
@@ -141,12 +139,24 @@ func main() {
 
 	case "sendeth":
 		sendeth := flag.NewFlagSet("sendeth", flag.ExitOnError)
-		from := sendeth.String("from", "", "the required address to check balance")
+		from := sendeth.String("from", "", "the required origin address")
+		to := sendeth.String("to", "", "the required destination address")
+		amount := sendeth.String("amount", "", "the required value to send on ether")
 
 		sendeth.Parse(os.Args[2:])
 
 		if *from == "" {
-			fmt.Printf("the origin wallet address is required\n")
+			fmt.Printf("the origin address is required\n")
+			os.Exit(1)
+		}
+
+		if *to == "" {
+			fmt.Printf("the destiny address is required\n")
+			os.Exit(1)
+		}
+
+		if *amount == "" {
+			fmt.Printf("the amount value to send is required\n")
 			os.Exit(1)
 		}
 
@@ -160,7 +170,29 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("key: %v\n", crypto.PubkeyToAddress(key.PublicKey).Hex())
+		client, err := createClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer client.Close()
+
+		tx, err := client.PrepareTx(*from, *to, *amount)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		signedTx, err := SignTx(tx, key)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = client.SendTx(signedTx)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Transaction %v sent to the network\n", signedTx.Hash())
+		fmt.Printf("If you want to know the tx status, type txinfo -hash %v\n", signedTx.Hash())
 
 	default:
 		fmt.Printf("command not found\n")
