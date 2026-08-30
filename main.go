@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth")
+		fmt.Fprintf(os.Stderr, "usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth\n")
 		os.Exit(1)
 	}
 
@@ -39,7 +39,7 @@ func main() {
 		getbalance.Parse(os.Args[2:])
 
 		if *address == "" {
-			fmt.Printf("a wallet address is required\n")
+			fmt.Fprintf(os.Stderr, "a wallet address is required\n")
 			os.Exit(1)
 		}
 
@@ -63,7 +63,7 @@ func main() {
 		blockinfo.Parse(os.Args[2:])
 
 		if *height < 0 {
-			fmt.Printf("must give a block height\n")
+			fmt.Fprintf(os.Stderr, "must give a block height\n")
 			os.Exit(1)
 		}
 
@@ -87,7 +87,7 @@ func main() {
 		txinfo.Parse(os.Args[2:])
 
 		if *txHash == "" {
-			fmt.Printf("must give a transaction hash\n")
+			fmt.Fprintf(os.Stderr, "must give a transaction hash\n")
 			os.Exit(1)
 		}
 
@@ -146,17 +146,17 @@ func main() {
 		sendeth.Parse(os.Args[2:])
 
 		if *from == "" {
-			fmt.Printf("the origin address is required\n")
+			fmt.Fprintf(os.Stderr, "the origin address is required\n")
 			os.Exit(1)
 		}
 
 		if *to == "" {
-			fmt.Printf("the destiny address is required\n")
+			fmt.Fprintf(os.Stderr, "the destiny address is required\n")
 			os.Exit(1)
 		}
 
 		if *amount == "" {
-			fmt.Printf("the amount value to send is required\n")
+			fmt.Fprintf(os.Stderr, "the amount value to send is required\n")
 			os.Exit(1)
 		}
 
@@ -195,7 +195,7 @@ func main() {
 		fmt.Printf("If you want to know the tx status, type txinfo -hash %v\n", signedTx.Hash())
 
 	default:
-		fmt.Printf("command not found\n")
+		fmt.Fprintf(os.Stderr, "command not found\n")
 		os.Exit(1)
 	}
 }
