@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"math/big"
 	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -17,4 +19,11 @@ func BalanceOfCalldata(address string) []byte {
 	calldata := append(fnFourBytes, addrBytes...)
 
 	return calldata
+}
+
+func VerifyBalanceOfReturnData(returnData []byte) (*big.Int, error) {
+	if len(returnData) != 32 {
+		return nil, fmt.Errorf("return data error: expected 32 bytes, got %d bytes, address is not a token contract", len(returnData))
+	}
+	return new(big.Int).SetBytes(returnData), nil
 }
