@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth\n")
+		fmt.Fprintf(os.Stderr, "usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth, tokenbalance\n")
 		os.Exit(1)
 	}
 
@@ -193,6 +193,44 @@ func main() {
 
 		fmt.Printf("Transaction %v sent to the network\n", signedTx.Hash())
 		fmt.Printf("If you want to know the tx status, type txinfo -hash %v\n", signedTx.Hash())
+
+	case "tokenbalance":
+		tokenbalance := flag.NewFlagSet("tokenbalance", flag.ExitOnError)
+
+		address := tokenbalance.String("address", "", "the required address to check balance")
+		token := tokenbalance.String("token", "", "the required token contract")
+
+		tokenbalance.Parse(os.Args[2:])
+
+		if *address == "" {
+			fmt.Fprintf(os.Stderr, "a wallet address is required\n")
+			os.Exit(1)
+		}
+
+		if *token == "" {
+			fmt.Fprintf(os.Stderr, "a token contract is required\n")
+			os.Exit(1)
+		}
+
+		calldata := BalanceOfCalldata(*address)
+
+		client, err := createClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer client.Close()
+
+		returnData, err := client.Call(*token, calldata)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		balance, err := VerifyBalanceOfReturnData(returnData)
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			fmt.Printf("%s\n", balance)
+		}
 
 	default:
 		fmt.Fprintf(os.Stderr, "command not found\n")
