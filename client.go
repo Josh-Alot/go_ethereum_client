@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -228,4 +229,16 @@ func (client *Client) SendTx(tx *types.Transaction) error {
 	}
 
 	return nil
+}
+
+func (client *Client) Call(to string, calldata []byte) ([]byte, error) {
+	toAddr := common.HexToAddress(to)
+	callMsg := ethereum.CallMsg{To: &toAddr, Data: calldata}
+
+	returnData, err := client.eth.CallContract(context.Background(), callMsg, nil)
+	if err != nil {
+		return nil, fmt.Errorf("call contract error: %w", err)
+	}
+
+	return returnData, nil
 }
