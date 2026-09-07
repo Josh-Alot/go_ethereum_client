@@ -212,7 +212,15 @@ func main() {
 			os.Exit(1)
 		}
 
-		calldata := BalanceOfCalldata(*address)
+		parsed, err := ParseERC20ABI()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		packed, err := PackBalanceOf(parsed, *address)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		client, err := createClient()
 		if err != nil {
@@ -220,12 +228,12 @@ func main() {
 		}
 		defer client.Close()
 
-		returnData, err := client.Call(*token, calldata)
+		returnData, err := client.Call(*token, packed)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		balance, err := VerifyBalanceOfReturnData(returnData)
+		balance, err := UnpackBalanceOf(parsed, returnData)
 		if err != nil {
 			log.Fatal(err)
 		} else {
