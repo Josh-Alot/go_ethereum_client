@@ -3,3 +3,4 @@ wallets.txt
 
 .anvil/
 accounts/
+.secrets.sh
