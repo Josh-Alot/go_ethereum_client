@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth, tokenbalance\n")
+		fmt.Fprintf(os.Stderr, "usage: blocknumber, getbalance, blockinfo, txinfo, createaccount, listaccounts, sendeth, tokenbalance, tokeninfo\n")
 		os.Exit(1)
 	}
 
@@ -236,9 +236,93 @@ func main() {
 		balance, err := UnpackBalanceOf(parsed, returnData)
 		if err != nil {
 			log.Fatal(err)
-		} else {
-			fmt.Printf("%s\n", balance)
 		}
+
+		fmt.Printf("Token balance: %d\n", balance)
+
+	case "tokeninfo":
+		tokeninfo := flag.NewFlagSet("tokeninfo", flag.ExitOnError)
+		token := tokeninfo.String("token", "", "the required token contract")
+
+		tokeninfo.Parse(os.Args[2:])
+
+		if *token == "" {
+			fmt.Fprintf(os.Stderr, "a token contract is required\n")
+			os.Exit(1)
+		}
+
+		parsed, err := ParseERC20ABI()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		namePacked, err := PackName(parsed)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		symbolPacked, err := PackSymbol(parsed)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		decimalsPacked, err := PackDecimals(parsed)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		totalSupplyPacked, err := PackTotalSupply(parsed)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		client, err := createClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer client.Close()
+
+		returnNameData, err := client.Call(*token, namePacked)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		name, err := UnpackName(parsed, returnNameData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		returnSymbolData, err := client.Call(*token, symbolPacked)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		symbol, err := UnpackSymbol(parsed, returnSymbolData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		returnDecimalsData, err := client.Call(*token, decimalsPacked)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		decimals, err := UnpackDecimals(parsed, returnDecimalsData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		returnTotalSupplyData, err := client.Call(*token, totalSupplyPacked)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		totalSupply, err := UnpackTotalSupply(parsed, returnTotalSupplyData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		FormatTokenInfo(name, symbol, decimals, totalSupply)
 
 	default:
 		fmt.Fprintf(os.Stderr, "command not found\n")

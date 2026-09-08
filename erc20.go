@@ -84,33 +84,109 @@ func UnpackBalanceOf(parsed abi.ABI, returnData []byte) (*big.Int, error) {
 }
 
 func PackName(parsed abi.ABI) ([]byte, error) {
-	return []byte{}, nil
+	packed, err := parsed.Pack("name")
+	if err != nil {
+		return nil, fmt.Errorf("pack token name error: %w", err)
+	}
+
+	return packed, nil
 }
 
 func UnpackName(parsed abi.ABI, returnData []byte) (string, error) {
-	return "", nil
+	if len(returnData) == 0 {
+		return "", fmt.Errorf("unpack token name error: expected 96 bytes, got %d bytes, address is not a token contract", len(returnData))
+	}
+
+	data, err := parsed.Unpack("name", returnData)
+	if err != nil {
+		return "", fmt.Errorf("unpack token name error: %w", err)
+	}
+
+	name, ok := data[0].(string)
+	if !ok {
+		return "", fmt.Errorf("unpack token name error: return data invalid")
+	}
+
+	return name, nil
 }
 
 func PackSymbol(parsed abi.ABI) ([]byte, error) {
-	return []byte{}, nil
+	packed, err := parsed.Pack("symbol")
+	if err != nil {
+		return nil, fmt.Errorf("pack token symbol error: %w", err)
+	}
+
+	return packed, nil
 }
 
 func UnpackSymbol(parsed abi.ABI, returnData []byte) (string, error) {
-	return "", nil
+	if len(returnData) == 0 {
+		return "", fmt.Errorf("unpack token symbol error: expected 96 bytes, got %d bytes, address is not a token contract", len(returnData))
+	}
+
+	data, err := parsed.Unpack("symbol", returnData)
+	if err != nil {
+		return "", fmt.Errorf("unpack token symbol error: %w", err)
+	}
+
+	symbol, ok := data[0].(string)
+	if !ok {
+		return "", fmt.Errorf("unpack token symbol error: return data invalid")
+	}
+
+	return symbol, nil
 }
 
 func PackDecimals(parsed abi.ABI) ([]byte, error) {
-	return []byte{}, nil
+	packed, err := parsed.Pack("decimals")
+	if err != nil {
+		return nil, fmt.Errorf("pack token decimals error: %w", err)
+	}
+
+	return packed, nil
 }
 
 func UnpackDecimals(parsed abi.ABI, returnData []byte) (uint8, error) {
-	return 0, nil
+	if len(returnData) == 0 {
+		return 0, fmt.Errorf("unpack token decimals error: expected 32 bytes, got %d bytes, address is not a token contract", len(returnData))
+	}
+
+	data, err := parsed.Unpack("decimals", returnData)
+	if err != nil {
+		return 0, fmt.Errorf("unpack token decimals error: %w", err)
+	}
+
+	decimals, ok := data[0].(uint8)
+	if !ok {
+		return 0, fmt.Errorf("unpack token decimals error: return data invalid")
+	}
+
+	return decimals, nil
 }
 
 func PackTotalSupply(parsed abi.ABI) ([]byte, error) {
-	return []byte{}, nil
+	packed, err := parsed.Pack("totalSupply")
+	if err != nil {
+		return nil, fmt.Errorf("pack token total supply error: %w", err)
+	}
+
+	return packed, nil
 }
 
 func UnpackTotalSupply(parsed abi.ABI, returnData []byte) (*big.Int, error) {
-	return &big.Int{}, nil
+	if len(returnData) == 0 {
+		return nil, fmt.Errorf("unpack token total supply error: expected 32 bytes, got %d bytes, address is not a token contract", len(returnData))
+	}
+
+	data, err := parsed.Unpack("totalSupply", returnData)
+	if err != nil {
+		return nil, fmt.Errorf("unpack token total supply error: %w", err)
+	}
+
+	totalSupply, ok := data[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("unpack token total supply error: return data invalid")
+	}
+
+	return totalSupply, nil
 }
