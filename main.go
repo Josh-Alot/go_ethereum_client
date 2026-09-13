@@ -217,7 +217,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		packed, err := PackBalanceOf(parsed, *address)
+		packed, err := packBalanceOf(parsed, *address)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -233,7 +233,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		balance, err := UnpackBalanceOf(parsed, returnData)
+		balance, err := unpackBalanceOf(parsed, returnData)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -251,78 +251,17 @@ func main() {
 			os.Exit(1)
 		}
 
-		parsed, err := ParseERC20ABI()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		namePacked, err := PackName(parsed)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		symbolPacked, err := PackSymbol(parsed)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		decimalsPacked, err := PackDecimals(parsed)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		totalSupplyPacked, err := PackTotalSupply(parsed)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		client, err := createClient()
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer client.Close()
 
-		returnNameData, err := client.Call(*token, namePacked)
+		tokenSummary, err := TokenInfo(client, *token)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		name, err := UnpackName(parsed, returnNameData)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		returnSymbolData, err := client.Call(*token, symbolPacked)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		symbol, err := UnpackSymbol(parsed, returnSymbolData)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		returnDecimalsData, err := client.Call(*token, decimalsPacked)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		decimals, err := UnpackDecimals(parsed, returnDecimalsData)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		returnTotalSupplyData, err := client.Call(*token, totalSupplyPacked)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		totalSupply, err := UnpackTotalSupply(parsed, returnTotalSupplyData)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		FormatTokenInfo(name, symbol, decimals, totalSupply)
+		FormatTokenInfo(*tokenSummary)
 
 	default:
 		fmt.Fprintf(os.Stderr, "command not found\n")

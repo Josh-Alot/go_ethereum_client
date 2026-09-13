@@ -104,9 +104,9 @@ func FormatAccountsList(accounts []AccountSummary) {
 	}
 }
 
-func FormatTokenInfo(name, symbol string, decimals uint8, totalSupply *big.Int) {
-	fmt.Printf("Token name: %s\n", name)
-	fmt.Printf("Token symbol: %s\n", symbol)
-	fmt.Printf("Token decimals: %d\n", decimals)
-	fmt.Printf("Total Supply: %d\n", totalSupply)
+func FormatTokenInfo(tokenSummary TokenSummary) {
+	fmt.Printf("Token name: %s\n", tokenSummary.Name)
+	fmt.Printf("Token symbol: %s\n", tokenSummary.Symbol)
+	fmt.Printf("Token decimals: %d\n", tokenSummary.Decimals)
+	fmt.Printf("Total Supply: %d\n", tokenSummary.TotalSupply)
 }

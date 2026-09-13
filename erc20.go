@@ -12,6 +12,13 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+type TokenSummary struct {
+	Name        string
+	Symbol      string
+	Decimals    uint8
+	TotalSupply *big.Int
+}
+
 //go:embed erc20.abi.json
 var erc20ABIJSON string
 
@@ -44,7 +51,84 @@ func ParseERC20ABI() (abi.ABI, error) {
 
 	return parsed, nil
 }
-func PackBalanceOf(parsed abi.ABI, address string) ([]byte, error) {
+
+func TokenInfo(client *Client, token string) (*TokenSummary, error) {
+	parsed, err := ParseERC20ABI()
+	if err != nil {
+		return nil, fmt.Errorf("parse erc20 abi contract error: %w", err)
+	}
+
+	namePacked, err := packName(parsed)
+	if err != nil {
+		return nil, fmt.Errorf("pack name error: %w", err)
+	}
+
+	symbolPacked, err := packSymbol(parsed)
+	if err != nil {
+		return nil, fmt.Errorf("pack symbol error: %w", err)
+	}
+
+	decimalsPacked, err := packDecimals(parsed)
+	if err != nil {
+		return nil, fmt.Errorf("pack decimals error: %w", err)
+	}
+
+	totalSupplyPacked, err := packTotalSupply(parsed)
+	if err != nil {
+		return nil, fmt.Errorf("pack total supply error: %w", err)
+	}
+
+	returnNameData, err := client.Call(token, namePacked)
+	if err != nil {
+		return nil, fmt.Errorf("call name error: %w", err)
+	}
+
+	name, err := unpackName(parsed, returnNameData)
+	if err != nil {
+		return nil, fmt.Errorf("unpack name error: %w", err)
+	}
+
+	returnSymbolData, err := client.Call(token, symbolPacked)
+	if err != nil {
+		return nil, fmt.Errorf("call symbol error: %w", err)
+	}
+
+	symbol, err := unpackSymbol(parsed, returnSymbolData)
+	if err != nil {
+		return nil, fmt.Errorf("unpack symbol error: %w", err)
+	}
+
+	returnDecimalsData, err := client.Call(token, decimalsPacked)
+	if err != nil {
+		return nil, fmt.Errorf("call decimals error: %w", err)
+	}
+
+	decimals, err := unpackDecimals(parsed, returnDecimalsData)
+	if err != nil {
+		return nil, fmt.Errorf("unpack decimals error: %w", err)
+	}
+
+	returnTotalSupplyData, err := client.Call(token, totalSupplyPacked)
+	if err != nil {
+		return nil, fmt.Errorf("call total supply error: %w", err)
+	}
+
+	totalSupply, err := unpackTotalSupply(parsed, returnTotalSupplyData)
+	if err != nil {
+		return nil, fmt.Errorf("unpack total supply error: %w", err)
+	}
+
+	summary := TokenSummary{
+		Name:        name,
+		Symbol:      symbol,
+		Decimals:    decimals,
+		TotalSupply: totalSupply,
+	}
+
+	return &summary, nil
+}
+
+func packBalanceOf(parsed abi.ABI, address string) ([]byte, error) {
 	isAddr := common.IsHexAddress(address)
 	if !isAddr {
 		return nil, fmt.Errorf("address %s: invalid address", address)
@@ -60,7 +144,7 @@ func PackBalanceOf(parsed abi.ABI, address string) ([]byte, error) {
 	return packed, nil
 }
 
-func UnpackBalanceOf(parsed abi.ABI, returnData []byte) (*big.Int, error) {
+func unpackBalanceOf(parsed abi.ABI, returnData []byte) (*big.Int, error) {
 	if len(returnData) == 0 {
 		return nil, fmt.Errorf("unpack balance of error: expected 32 bytes, got %d bytes, address is not a token contract", len(returnData))
 	}
@@ -83,7 +167,7 @@ func UnpackBalanceOf(parsed abi.ABI, returnData []byte) (*big.Int, error) {
 	return balance, nil
 }
 
-func PackName(parsed abi.ABI) ([]byte, error) {
+func packName(parsed abi.ABI) ([]byte, error) {
 	packed, err := parsed.Pack("name")
 	if err != nil {
 		return nil, fmt.Errorf("pack token name error: %w", err)
@@ -92,7 +176,7 @@ func PackName(parsed abi.ABI) ([]byte, error) {
 	return packed, nil
 }
 
-func UnpackName(parsed abi.ABI, returnData []byte) (string, error) {
+func unpackName(parsed abi.ABI, returnData []byte) (string, error) {
 	if len(returnData) == 0 {
 		return "", fmt.Errorf("unpack token name error: expected 96 bytes, got %d bytes, address is not a token contract", len(returnData))
 	}
@@ -110,7 +194,7 @@ func UnpackName(parsed abi.ABI, returnData []byte) (string, error) {
 	return name, nil
 }
 
-func PackSymbol(parsed abi.ABI) ([]byte, error) {
+func packSymbol(parsed abi.ABI) ([]byte, error) {
 	packed, err := parsed.Pack("symbol")
 	if err != nil {
 		return nil, fmt.Errorf("pack token symbol error: %w", err)
@@ -119,7 +203,7 @@ func PackSymbol(parsed abi.ABI) ([]byte, error) {
 	return packed, nil
 }
 
-func UnpackSymbol(parsed abi.ABI, returnData []byte) (string, error) {
+func unpackSymbol(parsed abi.ABI, returnData []byte) (string, error) {
 	if len(returnData) == 0 {
 		return "", fmt.Errorf("unpack token symbol error: expected 96 bytes, got %d bytes, address is not a token contract", len(returnData))
 	}
@@ -137,7 +221,7 @@ func UnpackSymbol(parsed abi.ABI, returnData []byte) (string, error) {
 	return symbol, nil
 }
 
-func PackDecimals(parsed abi.ABI) ([]byte, error) {
+func packDecimals(parsed abi.ABI) ([]byte, error) {
 	packed, err := parsed.Pack("decimals")
 	if err != nil {
 		return nil, fmt.Errorf("pack token decimals error: %w", err)
@@ -146,7 +230,7 @@ func PackDecimals(parsed abi.ABI) ([]byte, error) {
 	return packed, nil
 }
 
-func UnpackDecimals(parsed abi.ABI, returnData []byte) (uint8, error) {
+func unpackDecimals(parsed abi.ABI, returnData []byte) (uint8, error) {
 	if len(returnData) == 0 {
 		return 0, fmt.Errorf("unpack token decimals error: expected 32 bytes, got %d bytes, address is not a token contract", len(returnData))
 	}
@@ -164,7 +248,7 @@ func UnpackDecimals(parsed abi.ABI, returnData []byte) (uint8, error) {
 	return decimals, nil
 }
 
-func PackTotalSupply(parsed abi.ABI) ([]byte, error) {
+func packTotalSupply(parsed abi.ABI) ([]byte, error) {
 	packed, err := parsed.Pack("totalSupply")
 	if err != nil {
 		return nil, fmt.Errorf("pack token total supply error: %w", err)
@@ -173,7 +257,7 @@ func PackTotalSupply(parsed abi.ABI) ([]byte, error) {
 	return packed, nil
 }
 
-func UnpackTotalSupply(parsed abi.ABI, returnData []byte) (*big.Int, error) {
+func unpackTotalSupply(parsed abi.ABI, returnData []byte) (*big.Int, error) {
 	if len(returnData) == 0 {
 		return nil, fmt.Errorf("unpack token total supply error: expected 32 bytes, got %d bytes, address is not a token contract", len(returnData))
 	}
