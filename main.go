@@ -6,6 +6,10 @@ import (
 	"log"
 	"math/big"
 	"os"
+
+	"github.com/Josh-Alot/go_ethereum_client/bindings/erc20"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind/v2"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func main() {
@@ -212,12 +216,20 @@ func main() {
 			os.Exit(1)
 		}
 
+		/**
 		parsed, err := ParseERC20ABI()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		packed, err := packBalanceOf(parsed, *address)
+		if err != nil {
+			log.Fatal(err)
+		}
+		**/
+
+		erc := erc20.NewErc20()
+		packed, err := erc.TryPackBalanceOf(common.HexToAddress(*address))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -228,10 +240,15 @@ func main() {
 		}
 		defer client.Close()
 
+		/**
 		returnData, err := client.Call(*token, packed)
 		if err != nil {
 			log.Fatal(err)
 		}
+		**/
+
+		tokenAddr := common.HexToAddress(*token)
+		returnData, err := bind.Call(erc.Instance(client.eth, tokenAddr), nil, packed, nil)
 
 		balance, err := unpackBalanceOf(parsed, returnData)
 		if err != nil {
