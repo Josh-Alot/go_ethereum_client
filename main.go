@@ -222,11 +222,6 @@ func main() {
 		}
 		defer client.Close()
 
-		tokenInfo, err := TokenInfo(client, *token)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		erc := erc20.NewErc20()
 		packed, err := erc.TryPackBalanceOf(common.HexToAddress(*address))
 		if err != nil {
@@ -239,8 +234,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		formatted := FormatUnits(balance, tokenInfo.Decimals)
-		fmt.Printf("Token balance: %s %s\n", formatted, tokenInfo.Symbol)
+		fmt.Printf("Token balance: %s\n", balance)
 
 	case "tokeninfo":
 		tokeninfo := flag.NewFlagSet("tokeninfo", flag.ExitOnError)
