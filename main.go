@@ -216,17 +216,16 @@ func main() {
 			os.Exit(1)
 		}
 
-		/**
-		parsed, err := ParseERC20ABI()
+		client, err := createClient()
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer client.Close()
 
-		packed, err := packBalanceOf(parsed, *address)
+		tokenInfo, err := TokenInfo(client, *token)
 		if err != nil {
 			log.Fatal(err)
 		}
-		**/
 
 		erc := erc20.NewErc20()
 		packed, err := erc.TryPackBalanceOf(common.HexToAddress(*address))
@@ -234,28 +233,14 @@ func main() {
 			log.Fatal(err)
 		}
 
-		client, err := createClient()
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer client.Close()
-
-		/**
-		returnData, err := client.Call(*token, packed)
-		if err != nil {
-			log.Fatal(err)
-		}
-		**/
-
 		tokenAddr := common.HexToAddress(*token)
-		returnData, err := bind.Call(erc.Instance(client.eth, tokenAddr), nil, packed, nil)
-
-		balance, err := unpackBalanceOf(parsed, returnData)
+		balance, err := bind.Call(erc.Instance(client.eth, tokenAddr), nil, packed, erc.UnpackBalanceOf)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Token balance: %d\n", balance)
+		formatted := FormatUnits(balance, tokenInfo.Decimals)
+		fmt.Printf("Token balance: %s %s\n", formatted, tokenInfo.Symbol)
 
 	case "tokeninfo":
 		tokeninfo := flag.NewFlagSet("tokeninfo", flag.ExitOnError)
